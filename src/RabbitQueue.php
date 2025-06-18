@@ -774,4 +774,44 @@ class RabbitQueue extends Queue implements QueueContract
             return $this->deleteQueue($queue);
         }
     }
+
+
+    /**
+     * Publish job to RabbitMQ job queue
+     *
+     * @param string $jobName
+     * @param array $data
+     * @param string $queue
+     * @param string $connection
+     * @param string $payloadName
+     * @param array $options
+     * @param int | null $priority
+     * @return void
+     */
+    public static function publishToRabbitMQ(string $jobName, array $data = [], string $queue = 'default', string $connection = 'rabbitmq', string $payloadName = 'payload', array $options= [], int | null $priority = null) {
+        $className = sprintf("App\Jobs\%s", $jobName);
+        $payload = sprintf(':1:{s:%d:"%s";%s}', strlen($payloadName), $payloadName, serialize(json_encode($data)));
+        $command = sprintf('O:%d:"%s"%s', strlen($className), $className, $payload, );
+        $payload = [
+            "uuid" => (string) Str::uuid(),
+            "displayName" => $className,
+            "job" => "Illuminate\Queue\CallQueuedHandler@call",
+            "maxTries" => null,
+            "maxExceptions" => null,
+            "failOnTimeout" => false,
+            "backoff" => null,
+            "timeout" => null,
+            "retryUntil" => null,
+            "data" => [
+                "commandName" => $className,
+                "command" => $command
+            ],
+            "createdAt" => time(),
+            "delay" => null
+        ];
+
+        $queueManager = app('queue');
+        $queueConnection = $queueManager->connection($connection);
+        $queueConnection->pushRaw(json_encode($payload), $queue, $options, $priority ); 
+    }
 }
