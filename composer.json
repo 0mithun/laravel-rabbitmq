@@ -1,0 +1,48 @@
+{
+    "name": "0mithun/laravel-rabbitmq",
+    "description": "the best laravel rabbitmq package",
+    "keywords": ["rabbitmq", "message", "queue", "laravel", "job"],
+    "type": "library",
+    "require": {
+        "php": "^8.2",
+        "illuminate/queue": "^11.0|^12.0",
+        "php-amqplib/php-amqplib": "^v3.7.3",
+        "illuminate/support": "^11.0|^12.0",
+        "ext-pcntl": "*"
+    },
+    "require-dev": {
+        "ext-json": "*",
+        "phpunit/phpunit": "^10.0|^11.5.14",
+        "orchestra/testbench": "^9.0|^10.1",
+        "squizlabs/php_codesniffer": "^3.12",
+        "mockery/mockery": "^1.7.0",
+        "dg/bypass-finals": "dev-master",
+        "rector/rector": "^0.15.25"
+    },
+    "autoload": {
+        "psr-4": {
+            "Mithun\\LaravelRabbitMQ\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Mithun\\LaravelRabbitMQ\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Mithun\\LaravelRabbitMQ\\LaravelRabbitQueueServiceProvider"
+            ]
+        }
+    },
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Mithun Halder",
+            "email": "mithunrptc@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "prefer-stable": true
+}
