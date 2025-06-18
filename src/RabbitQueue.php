@@ -94,21 +94,21 @@ class RabbitQueue extends Queue implements QueueContract
      * @return string|null
      * @throws JsonException
      */
-    public function pushRaw($payload, $queue = null, array $options = []): ?string
+    public function pushRaw($payload, $queue = null, array $options = [], $priority= null): ?string
     {
         [$destination, $exchange, $exchangeType, $attempts] = $this->publishProperties($queue, $options);
 
         $this->declareDestination($destination, $exchange, $exchangeType);
 
         try {
-            [$message, $correlationId] = $this->createMessage($payload, $attempts);
+            [$message, $correlationId] = $this->createMessage($payload, $attempts, $priority);
             $this->amqpChannel->basic_publish($message, $exchange, $destination, true, false);
 
             return $correlationId;
         } catch (AMQPChannelClosedException | AMQPConnectionClosedException $exception) {
             // Reopen channel and try again
             $this->amqpChannel = $this->connection->channel();
-            [$message, $correlationId] = $this->createMessage($payload, $attempts);
+            [$message, $correlationId] = $this->createMessage($payload, $attempts, $priority);
             $this->amqpChannel->basic_publish($message, $exchange, $destination, true, false);
 
             return $correlationId;
@@ -656,7 +656,7 @@ class RabbitQueue extends Queue implements QueueContract
      * @return array
      * @throws JsonException
      */
-    public function createMessage($payload, int $attempts = 2): array
+    public function createMessage($payload, int $attempts = 2, $priority = null): array
     {
         $properties = [
             'content_type' => 'application/json',
@@ -679,11 +679,13 @@ class RabbitQueue extends Queue implements QueueContract
                 $properties['priority'] = $attempts;
             }
 
-            if (isset($currentPayload['data']['command'])) {
-                $commandData = @unserialize($currentPayload['data']['command'], ['allowed_classes' => true]);
-                if ($commandData !== false && property_exists($commandData, 'priority')) {
-                    $properties['priority'] = $commandData->priority;
-                }
+            if (isset($currentPayload['data']['command']) && $priority) {
+                // $commandData = @unserialize($currentPayload['data']['command'], ['allowed_classes' => true]);
+                // if ($commandData !== false && property_exists($commandData, 'priority')) {
+                //     $properties['priority'] = $commandData->priority;
+                // }
+
+                 $properties['priority'] = $priority;
             }
         } catch (JsonException) {
             // If we can't decode the payload, just generate a correlation ID
